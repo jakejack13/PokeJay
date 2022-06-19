@@ -127,3 +127,9 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# ROM and emulator files
+*.rom
+*.gb
+*.state
+*.ram
