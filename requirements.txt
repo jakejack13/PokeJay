@@ -1,3 +1,5 @@
 discord-py-interactions
 PyBoy
 python-dotenv
+discord
+discord.py

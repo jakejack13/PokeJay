@@ -1,11 +1,13 @@
 # import logging
 import os
 import asyncio
+# import logging
 from tempfile import TemporaryFile
 
 from dotenv import load_dotenv
 import interactions
 from pyboy import PyBoy
+import discord
 
 ## Load dotenv for token
 load_dotenv()
@@ -88,10 +90,11 @@ async def tick_emulator():
 ## Commands
 @bot.command(name='connect', description='Connect to the emulator')
 async def connect(ctx: interactions.CommandContext):
-    while True:
-        emu.screen_image().save(temp_img)
-        await ctx.send(embeds=interactions.Embed(image=interactions.Image(temp_img)), components=BUTTONS)
-        await asyncio.sleep(0.5)
+    # while True:
+    emu.screen_image().save(temp_img,format='png')
+    await ctx.send(interactions.File(fp=temp_img), components=BUTTONS)
+    # await ctx.get_channel().send(files=interactions.File(fp=temp_img), components=BUTTONS)
+    # await asyncio.sleep(0.5)
 
 
 ## Set up event loops for emulator running alongside bot
