@@ -1,75 +1,53 @@
-# import logging
 import os
 import asyncio
-# import logging
-from tempfile import TemporaryFile
 
 from dotenv import load_dotenv
-import interactions
-from pyboy import PyBoy
+from pyboy import PyBoy, WindowEvent
+import pyboy
 import discord
+from discord import app_commands
+
 
 ## Load dotenv for token
 load_dotenv()
 TOKEN = os.getenv('TOKEN')
 ROM_PATH = os.getenv('ROM_PATH')
+PNG_PATH = 'ss.png'
 
-## Set up logging 
-# logger = logging.getLogger()
-# logger.setLevel(logging.DEBUG)
-# handler = logging.FileHandler(filename='discord.log', encoding='utf-8', mode='w')
-# handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
-# logger.addHandler(handler)
+
+# Discord client with privileged intent
+class Aclient(discord.Client):
+    def __init__(self):
+        super().__init__(intents=discord.Intents.default())
+        self.synced = False
+
+    async def on_ready(self):
+        await self.wait_until_ready()
+        print("Readying")
+        if not self.synced:
+            await tree.sync(guild=discord.Object(id=809453853879304192))
+            self.synced = True
+        print("Logged in as")
+        print(self.user.name)
+        print(self.user.id)
+        print("------")
 
 
 ## Emulator buttons
-UP_BUTTON = interactions.Button(
-    style=interactions.ButtonStyle.PRIMARY,
-    label="Up",
-    custom_id="UP_BUTTON"
-)
-DOWN_BUTTON = interactions.Button(
-    style=interactions.ButtonStyle.PRIMARY,
-    label="Down",
-    custom_id="DOWN_BUTTON"
-)
-LEFT_BUTTON = interactions.Button(
-    style=interactions.ButtonStyle.PRIMARY,
-    label="Left",
-    custom_id="LEFT_BUTTON"
-)
-RIGHT_BUTTON = interactions.Button(
-    style=interactions.ButtonStyle.PRIMARY,
-    label="Right",
-    custom_id="RIGHT_BUTTON"
-)
-A_BUTTON = interactions.Button(
-    style=interactions.ButtonStyle.PRIMARY,
-    label="A",
-    custom_id="A_BUTTON"
-)
-B_BUTTON = interactions.Button(
-    style=interactions.ButtonStyle.PRIMARY,
-    label="B",
-    custom_id="B_BUTTON"
-)
-START_BUTTON = interactions.Button(
-    style=interactions.ButtonStyle.PRIMARY,
-    label="Start",
-    custom_id="START_BUTTON"
-)
-SELECT_BUTTON = interactions.Button(
-    style=interactions.ButtonStyle.PRIMARY,
-    label="Select",
-    custom_id="SELECT_BUTTON"
-)
+UP_BUTTON = None
+DOWN_BUTTON = None
+LEFT_BUTTON = None
+RIGHT_BUTTON = None
+A_BUTTON = None
+B_BUTTON = None
+START_BUTTON = None
+SELECT_BUTTON = None
 BUTTONS = [UP_BUTTON, DOWN_BUTTON, LEFT_BUTTON, RIGHT_BUTTON, A_BUTTON, B_BUTTON, START_BUTTON, SELECT_BUTTON]
 
-## Create temporary file for image processing
-temp_img = TemporaryFile()
 
 ## Create bot
-bot = interactions.Client(token=TOKEN)
+bot = Aclient()
+tree = app_commands.CommandTree(bot)
 
 ## Start emulator
 emu = PyBoy(ROM_PATH)
@@ -77,33 +55,70 @@ emu = PyBoy(ROM_PATH)
 ## Async emulator infinite loop
 async def tick_emulator():
     await bot.wait_until_ready()
-    try:
-        with open(ROM_PATH + '.state') as f:
-            emu.load_state(f)
-    except:
-        pass
+    # try:
+    #     with open(ROM_PATH + '.state') as f:
+    #         emu.load_state(f)
+    # except:
+    #     pass
     while not emu.tick():
-        pass
-    emu.save_state()
+        await asyncio.sleep(0.05)
+    # emu.save_state()
 
 
 ## Commands
-@bot.command(name='connect', description='Connect to the emulator')
-async def connect(ctx: interactions.CommandContext):
-    # while True:
-    emu.screen_image().save(temp_img,format='png')
-    await ctx.send(interactions.File(fp=temp_img), components=BUTTONS)
-    # await ctx.get_channel().send(files=interactions.File(fp=temp_img), components=BUTTONS)
-    # await asyncio.sleep(0.5)
+@tree.command(name='connect', description='Connects to the emulator', guild=discord.Object(id=809453853879304192))
+async def connect(interaction: discord.Interaction):
+    await interaction.response.send_message(content="Pokemon")
+    while True:
+        emu.screen_image().save(PNG_PATH)
+        await interaction.edit_original_message(content="Pokemon", 
+            attachments=[discord.File(PNG_PATH)]
+        )
+        await asyncio.sleep(0.5)
+
+@tree.command(name='up', description='Presses the UP button', guild=discord.Object(id=809453853879304192))
+async def up(interaction: discord.Interaction):
+    emu.send_input(WindowEvent.PRESS_ARROW_UP)
+    emu.send_input(WindowEvent.RELEASE_ARROW_UP)
+    await interaction.delete_original_message()
+
+@tree.command(name='down', description='Presses the DOWN button', guild=discord.Object(id=809453853879304192))
+async def down(interaction: discord.Interaction):
+    emu.send_input(WindowEvent.PRESS_ARROW_DOWN)
+    emu.send_input(WindowEvent.RELEASE_ARROW_DOWN)
+    await interaction.delete_original_message()
+
+@tree.command(name='left', description='Presses the LEFT button', guild=discord.Object(id=809453853879304192))
+async def left(interaction: discord.Interaction):
+    emu.send_input(WindowEvent.PRESS_ARROW_LEFT)
+    emu.send_input(WindowEvent.RELEASE_ARROW_LEFT)
+    await interaction.delete_original_message()
+
+@tree.command(name='right', description='Presses the RIGHT button', guild=discord.Object(id=809453853879304192))
+async def right(interaction: discord.Interaction):
+    emu.send_input(WindowEvent.PRESS_ARROW_RIGHT)
+    emu.send_input(WindowEvent.RELEASE_ARROW_RIGHT)
+    await interaction.delete_original_message()
+
+@tree.command(name='a', description='Presses the A button', guild=discord.Object(id=809453853879304192))
+async def a(interaction: discord.Interaction):
+    print("A")
+    emu.send_input(WindowEvent.PRESS_BUTTON_A)
+    emu.send_input(WindowEvent.RELEASE_BUTTON_A)
+    await interaction.delete_original_message()
+
+@tree.command(name='b', description='Presses the B button', guild=discord.Object(id=809453853879304192))
+async def b(interaction: discord.Interaction):
+    emu.send_input(WindowEvent.PRESS_BUTTON_B)
+    emu.send_input(WindowEvent.RELEASE_BUTTON_B)
+    await interaction.delete_original_message()
 
 
-## Set up event loops for emulator running alongside bot
-loop = asyncio.get_event_loop()
-task2 = loop.create_task(tick_emulator())
-task1 = loop.create_task(bot._ready())
-gathered = asyncio.gather(task1, task2)
-
+async def main():
+    async with bot:
+        bot.loop.create_task(tick_emulator())
+        await bot.start(TOKEN)
 
 ## Start the bot
 if __name__ == '__main__':
-    loop.run_until_complete(gathered)
+    asyncio.run(main())
