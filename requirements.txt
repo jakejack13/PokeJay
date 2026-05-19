@@ -4,4 +4,4 @@ discord
 discord.py
 aiohttp>=3.13.5 # not directly required, pinned by Snyk to avoid a vulnerability
 numpy>=2.4.4 # not directly required, pinned by Snyk to avoid a vulnerability
-zipp>=3.23.1 # not directly required, pinned by Snyk to avoid a vulnerability
+zipp>=4.1.0 # not directly required, pinned by Snyk to avoid a vulnerability
